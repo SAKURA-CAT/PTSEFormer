@@ -89,12 +89,12 @@ _C.LOSS.ct_offset_weight = 0.
 _C.DATASET = CN()
 
 _C.DATASET.cache_dir = "./datasets/cache"
-_C.DATASET.img_dir = "../datasets/ILSVRC2015/Data/{}",
-_C.DATASET.anno_path = "../datasets/ILSVRC2015/Annotations/{}",
+_C.DATASET.img_dir = "/home/likang/dataset/ILSVRC/Data/{}",
+_C.DATASET.anno_path = "/home/likang/dataset/ILSVRC/Annotations/{}",
 _C.DATASET.img_index = "./datasets/split_file/{}.txt",
 _C.DATASET.dataset_file = ["DET_train_30classes", "VID_train_15frames"]  # vid coco
 _C.DATASET.val_dataset = "VID_val_videos"
-_C.DATASET.coco_path = "../datasets/coco"
+_C.DATASET.coco_path = "/home/likang/dataset/coco"
 _C.DATASET.coco_panoptic_path = None  # todo
 _C.DATASET.remove_difficult = True
 _C.DATASET.num_classes = 1

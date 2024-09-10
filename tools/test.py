@@ -26,6 +26,12 @@ from src.engine.engine import evaluate, train_one_epoch
 # from torch.utils.tensorboard import SummaryWriter
 # from datasets.coco_hm import COCOHM
 from util.misc import save_config, is_main_process
+import swanlab
+
+swanlab.init(project='PTSEFormer', 
+             
+             mode='disabled'
+             )
 
 
 def main(cfg=cfg):

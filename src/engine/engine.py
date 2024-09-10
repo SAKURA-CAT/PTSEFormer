@@ -158,7 +158,6 @@ def evaluate(model, criterion, postprocessors, data_loader, base_ds, device, out
         samples = tmp
 
         targets = [{k: v.to(device, non_blocking=True) for k, v in t.items()} for t in targets]
-
         outputs = model(samples)
         loss_dict = criterion(outputs, targets)
         weight_dict = criterion.weight_dict

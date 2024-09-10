@@ -133,10 +133,14 @@ class PTSEFormer(nn.Module):
         mem_ref_stg1_list = []
         mask_ref_stg1_list = []
         for nest in img_ref_nest_list:
+            # 提取特征
             srcs, masks, pos = self.get_feat(nest)  # srcs here are list, not flattend yet, downsampling by
+            # 编码特征
             memory, dec_utils = self.d_enc(srcs, masks, pos)
             spatial_shapes, level_start_index, valid_ratios, mask_flatten = dec_utils
             # print(sum(sum(mask_flatten==True)))
+            
+            # 分割特征图并存储
             memory_level_list = []
             mask_level_list = []
             for i in range(len(level_start_index) - 1):
@@ -149,14 +153,71 @@ class PTSEFormer(nn.Module):
 
             mem_ref_stg1_list.append(memory_level_list)
             mask_ref_stg1_list.append(mask_level_list)
-
+        # 形成特征图和掩码
         mem_ref_stg1_cat = [torch.cat(item, dim=1) for item in list(zip(*mem_ref_stg1_list))]
         mask_ref_stg1_cat = [torch.cat(item, dim=1) for item in list(zip(*mask_ref_stg1_list))]
 
+        # 拼接mem_ref_stg1_list，合并成一个大的特征图
         mem_ref_stg1_cat4q = [torch.cat(item, dim=1) for item in mem_ref_stg1_list]
-        # for cur
+        """
+        8 batch size, multi image test with 6 images:
+        mem_ref_stg1_cat:
+        len: 4
+        torch.Size([8, 109886, 256])
+        torch.Size([8, 27636, 256])
+        torch.Size([8, 7056, 256])
+        torch.Size([8, 1764, 256])
+        
+        mask_ref_stg1_cat:
+        len: 4
+        torch.Size([8, 109886])
+        torch.Size([8, 27636])
+        torch.Size([8, 7056])
+        torch.Size([8, 1764])
+        
+        mem_ref_stg1_cat4q:
+        len: 7
+        torch.Size([8, 20906, 256])
+        torch.Size([8, 20906, 256])
+        torch.Size([8, 20906, 256])
+        torch.Size([8, 20906, 256])
+        torch.Size([8, 20906, 256])
+        torch.Size([8, 20906, 256])
+        torch.Size([8, 20906, 256])
+        
+        8 batch size, single image test:
+        mem_ref_stg1_cat:
+        len: 4
+        torch.Size([8, 15698, 256])
+        torch.Size([8, 3948, 256])
+        torch.Size([8, 1008, 256])
+        torch.Size([8, 252, 256])
+        
+        mask_ref_stg1_cat:
+        len: 4
+        torch.Size([8, 15698])
+        torch.Size([8, 3948])
+        torch.Size([8, 1008])
+        torch.Size([8, 252])
+        
+        mem_ref_stg1_cat4q:
+        len: 1
+        torch.Size([8, 20906, 256])
+        """
+        # print("mem_ref_stg1_cat:")
+        # print("len:",len(mem_ref_stg1_cat))
+        # for item in mem_ref_stg1_cat:
+        #     print(item.shape)
+        # print("mask_ref_stg1_cat:")
+        # print("len:",len(mask_ref_stg1_cat))
+        # for item in mask_ref_stg1_cat:
+        #     print(item.shape)
+        # print("mem_ref_stg1_cat4q:")
+        # print("len:",len(mem_ref_stg1_cat4q))
+        # for item in mem_ref_stg1_cat4q:
+        #     print(item.shape)
+        # 获取当前帧特征，并编码
         srcs, masks, pos = self.get_feat(img_curr_nest)
-
         memory, dec_utils = self.d_enc(srcs, masks, pos)
         spatial_shapes, level_start_index, valid_ratios, mask_flatten = dec_utils
         # print(sum(sum(mask_flatten == True)))
@@ -169,9 +230,48 @@ class PTSEFormer(nn.Module):
             mask_cur_stg1.append(mask_l)
         mem_cur_stg1.append(memory[:, level_start_index[-1]:, :])
         mask_cur_stg1.append(mask_flatten[:, level_start_index[-1]:])
+        """"
+        8 batch size, multi image test with 6 images:
+        mem_cur_stg1:
+        len: 4
+        torch.Size([8, 15698, 256])
+        torch.Size([8, 3948, 256])
+        torch.Size([8, 1008, 256])
+        torch.Size([8, 252, 256])
+        mask_cur_stg1:
+        len: 4
+        torch.Size([8, 15698])
+        torch.Size([8, 3948])
+        torch.Size([8, 1008])
+        torch.Size([8, 252])
+        
+        8 batch size, single image test:
+        mem_cur_stg1:
+        len: 4
+        torch.Size([8, 15698, 256])
+        torch.Size([8, 3948, 256])
+        torch.Size([8, 1008, 256])
+        torch.Size([8, 252, 256])
+        mask_cur_stg1:
+        len: 4
+        torch.Size([8, 15698])
+        torch.Size([8, 3948])
+        torch.Size([8, 1008])
+        torch.Size([8, 252])
+        """
+        
+        # print("mem_cur_stg1:")
+        # print("len:",len(mem_cur_stg1))
+        # for item in mem_cur_stg1:
+        #     print(item.shape)
+        # print("mask_cur_stg1:")
+        # print("len:",len(mask_cur_stg1))
+        # for item in mask_cur_stg1:
+        #     print(item.shape)
 
         # -------------------------------2nd stage------------------------------------
         mem_ref_stg2_list = []
+        # 遍历每个层次的参考帧特征
         for mem_ref, mask_ref in zip(mem_ref_stg1_list, mask_ref_stg1_list):
             mem_ref_stg2_level_list = []
             for mem_ref_level, mask_ref_level, mem_cur_level, mask_cur_level in zip(mem_ref, mask_ref, mem_cur_stg1, mask_cur_stg1):
@@ -180,11 +280,27 @@ class PTSEFormer(nn.Module):
             mem_ref_stg2_list.append(mem_ref_stg2_level_list)
 
         mem_ref_stg2_cat = [torch.cat(item, dim=1) for item in list(zip(*mem_ref_stg2_list))]
+        # print("mem_ref_stg2_cat:")
+        # print("len:",len(mem_ref_stg2_cat))
+        # for item in mem_ref_stg2_cat:
+        #     print(item.shape)
+            
 
 
 
         mem_cur_stg2 = []
         for mem_ref_cat_level, mask_ref_cat_level, mem_cur_level, mask_cur_level in zip(mem_ref_stg1_cat, mask_ref_stg1_cat, mem_cur_stg1, mask_cur_stg1):
+            """"
+            8 batch size, multi image test with 6 images:
+            mem_ref_cur_level: [8, 15698, 256]
+            mem_ref_cat_level: [8, 109886, 256]
+            
+            
+            8 batch size, single image test:
+            mem_ref_cur_level: [8, 15698, 256]
+            mem_ref_cat_level: [8, 15698, 256]
+            """
+            # ！！！报错
             mem_cur_stg2_level = self.s_decoder1(tgt=mem_cur_level, tgt_mask=None, memory=mem_ref_cat_level, memory_mask=None).squeeze(0)
             mem_cur_stg2.append(mem_cur_stg2_level)
 

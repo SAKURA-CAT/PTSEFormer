@@ -1,0 +1,6 @@
+__pycache__
+*.pth
+VID_val_file_anno.pkl
+datasets/split_file/VID_val_file.txt
+results/
+.VID_val_file.json

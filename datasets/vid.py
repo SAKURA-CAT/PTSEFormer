@@ -80,13 +80,17 @@ class VIDDataset(torch.utils.data.Dataset):
         self.categories = dict(zip(range(len(self.classes)), self.classes))
 
         self.annos = self.load_annos(os.path.join(self.cache_dir, self.image_set + "_anno.pkl"))
-
+        class JSONEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, np.float32):
+                    return float(obj)
+                return super().default(obj)
         if not self.is_train:
             out = self.convert_to_coco()
             if coco_anno_path is None:
                 coco_anno_path = self.cache_dir + image_set + '.json'
             if not os.path.exists(coco_anno_path):
-                json.dump(out, open(coco_anno_path, 'w'))
+                json.dump(out, open(coco_anno_path, 'w'), cls=JSONEncoder)
             self.coco = coco.COCO(coco_anno_path)
 
     def convert_to_coco(self):

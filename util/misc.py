@@ -24,6 +24,7 @@ import torch
 import torch.nn as nn
 import torch.distributed as dist
 from torch import Tensor
+from swanlab import get_run
 
 # needed due to empty tensor bug in pytorch and torchvision 0.5
 import torchvision
@@ -221,6 +222,8 @@ class MetricLogger(object):
             loss_str.append(
                 "{}: {}".format(name, str(meter))
             )
+            value = str(meter) if '(' not in str(meter) else str(meter).split('(')[0]
+            get_run().log({name: value})
         return self.delimiter.join(loss_str)
 
     def synchronize_between_processes(self):

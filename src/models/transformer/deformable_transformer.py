@@ -678,7 +678,7 @@ class SimpleDecoderLayerV2(nn.Module):
                  activation="relu", normalize_before=False):
         super().__init__()
         # self.self_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
-        self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout)
+        self.multihead_attn = nn.MultiheadAttention(d_model, nhead, dropout=dropout, batch_first=True)
         # Implementation of Feedforward model
         self.linear1 = nn.Linear(d_model, dim_feedforward)
         self.dropout = nn.Dropout(dropout)
@@ -709,6 +709,30 @@ class SimpleDecoderLayerV2(nn.Module):
         #                       key_padding_mask=tgt_key_padding_mask)[0]
         # tgt = tgt + self.dropout1(tgt2)
         # tgt = self.norm1(tgt)
+        """"
+        8 batch size, multi image test with 6 images:
+        query: [8, 15698, 256]
+        key: [8, 109886, 256]
+        value: [8, 109886, 256]
+        attn_mask: None
+        key_padding_mask: None
+        
+        
+        
+        8 batch size, single image test:
+        query: [8, 15698, 256]
+        key: [8, 15698, 256]
+        value: [8, 15698, 256]
+        attn_mask: None
+        key_padding_mask: None
+        """
+        
+        print('query', tgt.shape)
+        print('key', memory.shape)
+        print('value', memory.shape)
+        print('attn_mask', memory_mask if memory_mask is None else memory_mask.shape)
+        print('key_padding_mask', memory_key_padding_mask if memory_key_padding_mask is None else memory_key_padding_mask.shape)
+        
         tgt2 = self.multihead_attn(query=self.with_pos_embed(tgt, query_pos),
                                    key=self.with_pos_embed(memory, pos),
                                    value=memory, attn_mask=memory_mask,

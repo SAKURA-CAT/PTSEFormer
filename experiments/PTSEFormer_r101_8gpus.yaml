@@ -59,9 +59,9 @@ LOSS:
 
 
 DATASET:
-  dataset_file: ["DET_train_30classes", "VID_train_15frames"]  # vid coco
-  val_dataset: "VID_val_videos"
-  coco_path: "/dataset/public/coco"
+  dataset_file: ["VID_train_15frames"]  # vid coco
+  val_dataset: "VID_val_file"
+  coco_path: "/home/likang/dataset/coco"
   coco_panoptic_path: None  # todo
   remove_difficult: False
   num_classes: 30
@@ -69,4 +69,11 @@ DATASET:
   max_offset: 12
   min_offset: -12
   ref_num_local: 6
+
+TEST:
+  batch_size: 8
+  test_with_one_img: true
+  test_ref_nums: 6
+  test_max_offset: 12
+  test_min_offset: -12
 
